@@ -5,21 +5,20 @@ import { FunctionNode } from "./elements/function-node";
 import { ImportNode } from "./elements/import-node";
 import { InterfaceNode } from "./elements/interface-node";
 import { TypeAliasNode } from "./elements/type-alias-node";
-import { MemberReorder } from "./member-reorder";
 
 export function compareStrings(a: string, b: string)
 {
 	if (a > b)
 	{
-		return 1;
+		return 1
 	}
 	else if (a < b)
 	{
-		return -1;
+		return -1
 	}
 	else
 	{
-		return 0;
+		return 0
 	}
 }
 
@@ -27,15 +26,15 @@ export function compareNumbers(a: number, b: number)
 {
 	if (a > b)
 	{
-		return 1;
+		return 1
 	}
 	else if (a < b)
 	{
-		return -1;
+		return -1
 	}
 	else
 	{
-		return 0;
+		return 0
 	}
 }
 
@@ -75,11 +74,11 @@ export function getName(node: ElementNode, groupWithDecorators: boolean): string
 	{
 		if (node.decorators.length > 0)
 		{
-			return node.decorators.join(", ") + " " + node.name;
+			return node.decorators.join(", ") + " " + node.name
 		}
 	}
 
-	return node.name;
+	return node.name
 }
 
 export function sort<T extends ElementNode>(a: T, b: T, groupWithDecorators: boolean)
