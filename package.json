@@ -99,6 +99,14 @@
                                 "type": "string",
                                 "description": "Group caption (outputted in the region name if this group is a region and if using regions)."
                             },
+                            "memberReorder": {
+                                "type": "string",
+                                "default": "none",
+                                "enum": [
+                                    "none",
+                                    "alphabetically"
+                                ]
+                            },
                             "memberTypes": {
                                 "type": "array",
                                 "items": {
@@ -297,7 +305,8 @@
                             "caption": "Public Methods",
                             "memberTypes": [
                                 "publicMethods"
-                            ]
+                            ],
+                            "memberReorder": "none"
                         },
                         {
                             "caption": "Public Abstract Methods",
@@ -333,7 +342,8 @@
                             "caption": "Private Methods",
                             "memberTypes": [
                                 "privateMethods"
-                            ]
+                            ],
+                            "memberReorder": "none"
                         },
                         {
                             "caption": "Private Abstract Methods",
@@ -396,10 +406,11 @@
     "devDependencies": {
         "@types/mocha": "7.0.2",
         "@types/node": "13.13.5",
+        "@typescript-eslint/eslint-plugin": "^4.9.0",
+        "@typescript-eslint/parser": "^4.9.0",
         "eslint": "7.0.0",
+        "typescript": "^3.8.3",
         "vscode": "1.1.37"
     },
-    "dependencies": {
-        "typescript": "3.8.3"
-    }
+    "dependencies": {}
 }

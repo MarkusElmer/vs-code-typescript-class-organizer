@@ -1,4 +1,5 @@
 import { MemberType } from "./member-type";
+import { MemberReorder } from "./member-reorder";
 
 export class ElementNodeGroupConfiguration
 {
@@ -6,6 +7,7 @@ export class ElementNodeGroupConfiguration
 
     public caption: string = "";
     public memberTypes: MemberType[] = [];
+    public memberReorder: MemberReorder = MemberReorder.none;
 
     // #endregion Properties (4)
 }

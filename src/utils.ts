@@ -5,6 +5,7 @@ import { FunctionNode } from "./elements/function-node";
 import { ImportNode } from "./elements/import-node";
 import { InterfaceNode } from "./elements/interface-node";
 import { TypeAliasNode } from "./elements/type-alias-node";
+import { MemberReorder } from "./member-reorder";
 
 export function compareStrings(a: string, b: string)
 {

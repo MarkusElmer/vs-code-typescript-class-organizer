@@ -15,6 +15,10 @@ import { Transformer } from "./src/transformer";
 import { compareNumbers, getClasses, getEnums, getFunctions, getImports, getInterfaces, getTypeAliases } from "./src/utils";
 import * as ts from "typescript";
 import * as vscode from "vscode";
+import { MemberReorder } from "./src/member-reorder";
+import { sort } from "./src/utils";
+import { ConstructorNode } from "./src/elements/constructor-node";
+import { IndexNode } from "./src/elements/index-node";
 
 let configuration = getConfiguration();
 
@@ -99,6 +103,7 @@ function parseElementNodeGroupConfiguration(x: any)
 
     elementNodeGroupConfiguration.caption = x.caption;
     elementNodeGroupConfiguration.memberTypes = (x.memberTypes as string[]).map(y => MemberType[y as keyof typeof MemberType]);
+    elementNodeGroupConfiguration.memberReorder = x.memberReorder || MemberReorder.none;
 
     return elementNodeGroupConfiguration;
 }
@@ -461,190 +466,205 @@ function organizeClassMembers(classNode: ClassNode, memberTypeOrder: ElementNode
 
         for (const memberType of memberTypeGroup.memberTypes)
         {
+            let propertyNodes: PropertyNode[] | ConstructorNode[] | IndexNode[] | undefined = undefined;
+
             if (memberType === MemberType.privateStaticConstProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateStaticConstProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateStaticConstProperties();
             }
             else if (memberType === MemberType.privateConstProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateConstProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateConstProperties();
             }
             else if (memberType === MemberType.privateStaticReadOnlyProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateStaticReadOnlyProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateStaticReadOnlyProperties();
             }
             else if (memberType === MemberType.privateReadOnlyProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateReadOnlyProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateReadOnlyProperties();
             }
             else if (memberType === MemberType.privateStaticProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateStaticProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateStaticProperties();
             }
             else if (memberType === MemberType.privateProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateProperties();
             }
             else if (memberType === MemberType.protectedStaticConstProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedStaticConstProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedStaticConstProperties();
             }
             else if (memberType === MemberType.protectedConstProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedConstProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedConstProperties();
             }
             else if (memberType === MemberType.protectedStaticReadOnlyProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedStaticReadOnlyProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedStaticReadOnlyProperties();
             }
             else if (memberType === MemberType.protectedReadOnlyProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedReadOnlyProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedReadOnlyProperties();
             }
             else if (memberType === MemberType.protectedStaticProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedStaticProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedStaticProperties();
             }
             else if (memberType === MemberType.protectedProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedProperties();
             }
             else if (memberType === MemberType.publicStaticConstProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicStaticConstProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicStaticConstProperties();
             }
             else if (memberType === MemberType.publicConstProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicConstProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicConstProperties();
             }
             else if (memberType === MemberType.publicStaticReadOnlyProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicStaticReadOnlyProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicStaticReadOnlyProperties();
             }
             else if (memberType === MemberType.publicReadOnlyProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicReadOnlyProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicReadOnlyProperties();
             }
             else if (memberType === MemberType.publicStaticProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicStaticProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicStaticProperties();
             }
             else if (memberType === MemberType.publicProperties)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicProperties(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicProperties();
             }
             else if (memberType === MemberType.constructors)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getConstructors(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getConstructors();
             }
             else if (memberType === MemberType.publicStaticIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicStaticIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicStaticIndexes();
             }
             else if (memberType === MemberType.publicIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicIndexes();
             }
             else if (memberType === MemberType.publicAbstractIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicAbstractIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicAbstractIndexes();
             }
             else if (memberType === MemberType.protectedStaticIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedStaticIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedStaticIndexes();
             }
             else if (memberType === MemberType.protectedIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedIndexes();
             }
             else if (memberType === MemberType.protectedAbstractIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedAbstractIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedAbstractIndexes();
             }
             else if (memberType === MemberType.privateStaticIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateStaticIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateStaticIndexes();
             }
             else if (memberType === MemberType.privateIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateIndexes();
             }
             else if (memberType === MemberType.privateAbstractIndexes)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateAbstractIndexes(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateAbstractIndexes();
             }
             else if (memberType === MemberType.publicStaticGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicStaticGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicStaticGettersAndSetters();
             }
             else if (memberType === MemberType.publicGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicGettersAndSetters();
             }
             else if (memberType === MemberType.publicAbstractGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicAbstractGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicAbstractGettersAndSetters();
             }
             else if (memberType === MemberType.protectedStaticGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedStaticGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedStaticGettersAndSetters();
             }
             else if (memberType === MemberType.protectedGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedGettersAndSetters();
             }
             else if (memberType === MemberType.protectedAbstractGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedAbstractGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedAbstractGettersAndSetters();
             }
             else if (memberType === MemberType.privateStaticGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateStaticGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateStaticGettersAndSetters();
             }
             else if (memberType === MemberType.privateGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateGettersAndSetters();
             }
             else if (memberType === MemberType.privateAbstractGettersAndSetters)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateAbstractGettersAndSetters(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateAbstractGettersAndSetters();
             }
             else if (memberType === MemberType.publicStaticMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicStaticMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicStaticMethods();
             }
             else if (memberType === MemberType.publicMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicMethods();
             }
             else if (memberType === MemberType.publicAbstractMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPublicAbstractMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPublicAbstractMethods();
             }
             else if (memberType === MemberType.protectedStaticMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedStaticMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedStaticMethods();
             }
             else if (memberType === MemberType.protectedMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedMethods();
             }
             else if (memberType === MemberType.protectedAbstractMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getProtectedAbstractMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getProtectedAbstractMethods();
             }
             else if (memberType === MemberType.privateStaticMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateStaticMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateStaticMethods();
             }
             else if (memberType === MemberType.privateMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateMethods();
             }
             else if (memberType === MemberType.privateAbstractMethods)
             {
-                memberGroups.push(new ElementNodeGroup(null, [], classNode.getPrivateAbstractMethods(groupElementsWithDecorators), false));
+                propertyNodes = classNode.getPrivateAbstractMethods();
             }
+
+
+            if (propertyNodes !== undefined)
+            {
+
+                // Apply Sorting
+                if (memberTypeGroup.memberReorder === MemberReorder.alphabetically)
+                {
+                    propertyNodes = propertyNodes.sort((a: any, b: any) => sort(a, b, groupElementsWithDecorators));
+                }
+                memberGroups.push(new ElementNodeGroup(null, [], propertyNodes, false));
+            }
+
         }
 
         regions.push(new ElementNodeGroup(memberTypeGroup.caption, memberGroups, [], true));
